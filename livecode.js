@@ -1,6 +1,7 @@
 // vars
 var nLoopCount = 0;
 var szLiveCode = "console.log( ':D' );";
+var szOldLiveCode = szLiveCode;
 var txtLiveCode;
 var bRunning = true;
 
@@ -15,10 +16,16 @@ var Init = function() {
 	document.addEventListener( "keypress", function(e) {
 		// evaluate new live code: CTRL + ENTER
 		if( e.ctrlKey && e.keyCode == 13 )
+		{
 			UpdateLiveCode();
+			return false;
+		}
+		return true;
 	}, false );
 }
 var UpdateLiveCode = function() {
+	// save old live code in case of error
+	szOldLiveCode = szLiveCode;
 	// set new live code to be evaulated by main loop
 	szLiveCode = txtLiveCode.value;
 }
@@ -27,8 +34,14 @@ var PausePlay = function() {
 }
 var MainLoop = function() {
 	if( bRunning ) {
-		// eval live code
-		eval( szLiveCode );
+		try {
+			// eval live code
+			eval( szLiveCode );
+		} catch( e ) {
+			// show the error but revert to previously live code
+			console.log( e );
+			szLiveCode = szOldLiveCode;
+		}
 		
 		// call "safe" loop
 		window.webkitRequestAnimationFrame( MainLoop, this );

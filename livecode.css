@@ -6,13 +6,28 @@ body {
 	background-color: #444;
 }
 #livecode {
-	font: 2em monospace;
+	font: 1.5em monospace;
 	padding: 10px;
 	border-width: 0px;
 	width: 100%;
+	height: 100%;
 	background-color: #444;
 	color: #4e4;
+	position: fixed;
+	top: 0px;
+	left: 0px;
+	z-index: 1;
 }
 #livecode:focus {
 	outline-width: 0px;
 }
+
+#livecode_canvas {
+	position: fixed;
+	top: 0px;
+	left: 0px;
+	width: 100%;
+	height: 100%;
+	z-index: 0;
+}
+
