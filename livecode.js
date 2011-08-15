@@ -5,13 +5,31 @@ var szOldLiveCode = szLiveCode;
 var txtLiveCode;
 var bRunning = true;
 
-var Canvas2D;
+// define Canvas2D object
+var Canvas2D = {
+	Context : {},
+	SetContext : function( context2d ) {
+		Canvas2D.Context = context2d;
+	},
+	DrawRect : function( x, y, width, height, color ) {
+		// TODO: set fill to color param
+		//var colorOldFill = Canvas2D.Context.getFill();
+		//Canvas2D.Context.setFill( color );
+		Canvas2D.Context.fillRect( x, y, width, height );
+		//Canvas2D.Context.setFill( colorOldFill );
+	},
+	DrawBall : function( x, y, radius, color ) {
+		Canvas2D.Context.beginPath();
+		Canvas2D.Context.arc( x, y, radius, 0, 2 * Math.PI, false );
+		Canvas2D.Context.fill();
+	}
+};
 
 // funcs
 var Init = function() {
 	// get the canvas 2D context
 	var canvasLiveCode = document.getElementById( "livecode_canvas" );
-	Canvas2D = canvasLiveCode.getContext( "2d" );
+	Canvas2D.SetContext( canvasLiveCode.getContext( "2d" ) );
 
 	// get live code text area
 	txtLiveCode = document.getElementById( "livecode" );
