@@ -17,6 +17,7 @@ body {
 	top: 0px;
 	left: 0px;
 	z-index: 1;
+	opacity: 0.6;
 }
 #livecode:focus {
 	outline-width: 0px;

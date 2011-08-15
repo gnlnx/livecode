@@ -5,8 +5,14 @@ var szOldLiveCode = szLiveCode;
 var txtLiveCode;
 var bRunning = true;
 
+var Canvas2D;
+
 // funcs
 var Init = function() {
+	// get the canvas 2D context
+	var canvasLiveCode = document.getElementById( "livecode_canvas" );
+	Canvas2D = canvasLiveCode.getContext( "2d" );
+
 	// get live code text area
 	txtLiveCode = document.getElementById( "livecode" );
 	// default live code
