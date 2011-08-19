@@ -1,80 +1,81 @@
-// vars
-var nLoopCount = 0;
-var szLiveCode = "console.log( ':D' );";
-var szOldLiveCode = szLiveCode;
-var txtLiveCode;
-var bRunning = true;
-
 // define Canvas2D object
 var Canvas2D = {
-	Context : {},
-	SetContext : function( context2d ) {
-		Canvas2D.Context = context2d;
-	},
-	DrawRect : function( x, y, width, height, color ) {
-		// TODO: set fill to color param
-		//var colorOldFill = Canvas2D.Context.getFill();
-		//Canvas2D.Context.setFill( color );
-		Canvas2D.Context.fillRect( x, y, width, height );
-		//Canvas2D.Context.setFill( colorOldFill );
-	},
-	DrawBall : function( x, y, radius, color ) {
-		Canvas2D.Context.beginPath();
-		Canvas2D.Context.arc( x, y, radius, 0, 2 * Math.PI, false );
-		Canvas2D.Context.fill();
+	ctx : null,
+	drawBall : function( x, y, radius ) {
+		Canvas2D.ctx.arc( x, y, radius, 0, 2 * Math.PI, false );
 	}
 };
 
-// funcs
-var Init = function() {
-	// get the canvas 2D context
-	var canvasLiveCode = document.getElementById( "livecode_canvas" );
-	Canvas2D.SetContext( canvasLiveCode.getContext( "2d" ) );
+// user.funcs
+var $Update = function() {}
+var $Render = function() {}
 
-	// get live code text area
-	txtLiveCode = document.getElementById( "livecode" );
-	// default live code
-	txtLiveCode.value = szLiveCode;
+// sys.funcs
+var Sys = {
+	// vars
+	szLiveCode : "var _main = function() { \n console.log( ':D' );\n}",
+	szOldLiveCode : "",
+	txtLiveCode : "",
+	bRunning : true,
 
-	// set event listeners
-	document.addEventListener( "keypress", function(e) {
-		// evaluate new live code: CTRL + ENTER
-		if( e.ctrlKey && e.keyCode == 13 )
-		{
-			UpdateLiveCode();
-			return false;
-		}
-		return true;
-	}, false );
-}
-var UpdateLiveCode = function() {
-	// save old live code in case of error
-	szOldLiveCode = szLiveCode;
-	// set new live code to be evaulated by main loop
-	szLiveCode = txtLiveCode.value;
-}
-var PausePlay = function() {
-	bRunning = !bRunning;
-}
-var MainLoop = function() {
-	if( bRunning ) {
+	Init : function() {
+		// get the canvas 2D context
+		var canvasLiveCode = document.getElementById( "livecode_canvas" );
+		Canvas2D.ctx = canvasLiveCode.getContext( "2d" );
+
+		// get live code text area
+		Sys.txtLiveCode = document.getElementById( "livecode" );
+		// default live code
+		Sys.txtLiveCode.focus();
+		Sys.txtLiveCode.value = Sys.szLiveCode;
+
+		// set event listeners
+		document.addEventListener( "keypress", function(e) {
+			// evaluate new live code: CTRL + SPACE
+			if( e.ctrlKey && e.keyCode == 0 )
+			{
+				Sys.UpdateLiveCode();
+			}
+		}, false );
+	},
+	UpdateLiveCode : function() {
+		// save old live code in case of error
+		Sys.szOldLiveCode = Sys.szLiveCode;
+		// set new live code to be evaulated by main loop
+		Sys.szLiveCode = Sys.txtLiveCode.value;
+		// evaluate new code
 		try {
-			// eval live code
-			eval( szLiveCode );
+			eval( Sys.szLiveCode );
 		} catch( e ) {
-			// show the error but revert to previously live code
 			console.log( e );
-			szLiveCode = szOldLiveCode;
+			Sys.szLiveCode = Sys.szOldLiveCode;
+
+			$Update = function() {};
+			$Render = function() {};
 		}
-		
-		// call "safe" loop
-		window.webkitRequestAnimationFrame( MainLoop, this );
+	},
+	PausePlay : function() {
+		Sys.bRunning = !Sys.bRunning;
+	},
+	///////////////////////////////////////////////////////////////
+	// overwritten by user
+	Update : function() { $Update(); },
+	Render : function() { $Render(); },
+	///////////////////////////////////////////////////////////////
+	MainLoop : function() {
+		if( Sys.bRunning ) {
+			Sys.Update();
+			Sys.Render();
+			
+			// call "safe" loop...only happens when the tab is active
+			window.webkitRequestAnimationFrame( Sys.MainLoop, this );
+		}
 	}
+
 }
 
-// set up
+// start session
 document.addEventListener( "DOMContentLoaded", function() {
-	Init();
-	MainLoop();
+	Sys.Init();
+	Sys.MainLoop();
 }, false );
-
