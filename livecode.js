@@ -27,6 +27,8 @@ var Sys = {
 	Init : function() {
 		// get the canvas 2D context
 		var canvasLiveCode = document.getElementById( "livecode_canvas" );
+		canvasLiveCode.setAttribute( "width", window.innerWidth );
+		canvasLiveCode.setAttribute( "height", window.innerHeight );
 		Canvas2D.ctx = canvasLiveCode.getContext( "2d" );
 
 		// get live code text area
