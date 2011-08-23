@@ -1,19 +1,25 @@
 // define Canvas2D object
 var Canvas2D = {
 	ctx : null,
-	drawBall : function( x, y, radius ) {
+	drawBall : function( x, y, radius, bFill ) {
+		Canvas2D.ctx.beginPath();
 		Canvas2D.ctx.arc( x, y, radius, 0, 2 * Math.PI, false );
+		if( bFill )
+			Canvas2D.ctx.fill();
+		else
+			Canvas2D.ctx.stroke();
 	}
 };
 
 // user.funcs
+var $Init = function() {}
 var $Update = function() {}
 var $Render = function() {}
 
 // sys.funcs
 var Sys = {
 	// vars
-	szLiveCode : "var _main = function() { \n console.log( ':D' );\n}",
+	szLiveCode : "$Init = function() {};\n$Update = function() {};\n$Render = function() {}",
 	szOldLiveCode : "",
 	txtLiveCode : "",
 	bRunning : true,
@@ -28,6 +34,7 @@ var Sys = {
 		// default live code
 		Sys.txtLiveCode.focus();
 		Sys.txtLiveCode.value = Sys.szLiveCode;
+		Sys.UpdateLiveCode();
 
 		// set event listeners
 		document.addEventListener( "keypress", function(e) {
@@ -46,10 +53,12 @@ var Sys = {
 		// evaluate new code
 		try {
 			eval( Sys.szLiveCode );
+			$Init();
 		} catch( e ) {
 			console.log( e );
 			Sys.szLiveCode = Sys.szOldLiveCode;
 
+			$Init = function() {};
 			$Update = function() {};
 			$Render = function() {};
 		}
