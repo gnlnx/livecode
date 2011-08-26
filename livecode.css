@@ -27,10 +27,10 @@ body {
 	position: fixed;
 	top: 0px;
 	left: 0px;
-	/*
+	z-index: 0;
+	/* DON'T DO THIS...it will stretch the canvas
 	width: 100%;
 	height: 100%;
 	*/
-	z-index: 0;
 }
 
