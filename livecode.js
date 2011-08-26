@@ -96,7 +96,11 @@ var Sys = {
 	///////////////////////////////////////////////////////////////
 	// overwritten by user
 	Update : function() { $Update(); },
-	Render : function() { $Render(); },
+	Render : function() { 
+		// clear canvas before user.render
+		Sys.pCanvas.width = Sys.pCanvas.width;
+		$Render();
+	},
 	///////////////////////////////////////////////////////////////
 	MainLoop : function() {
 		if( Sys.bRunning ) {
