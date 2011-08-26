@@ -1,13 +1,27 @@
-// define Canvas2D object
-var Canvas2D = {
-	ctx : null,
+/*
+// define Physics2D object
+var Physics2D = {
+	pObjects : [],
+	bGravity : true,
+	addObject : function( x, y, mass ) {
+		Physics2D.pObjects.push( {x, y, mass} );
+	}
+	update : function() {
+	}
+};
+*/
+
+// define Render2D object
+var Render2D = {
+	pContext : null,
 	drawBall : function( x, y, radius, bFill ) {
-		Canvas2D.ctx.beginPath();
-		Canvas2D.ctx.arc( x, y, radius, 0, 2 * Math.PI, false );
+		Render2D.pContext.fillStyle = "#f00";
+		Render2D.pContext.beginPath();
+		Render2D.pContext.arc( x, y, radius, 0, 2 * Math.PI, false );
 		if( bFill )
-			Canvas2D.ctx.fill();
+			Render2D.pContext.fill();
 		else
-			Canvas2D.ctx.stroke();
+			Render2D.pContext.stroke();
 	}
 };
 
@@ -19,6 +33,7 @@ var $Render = function() {}
 // sys.funcs
 var Sys = {
 	// vars
+	pCanvas : null,
 	szLiveCode : "$Init = function() {};\n$Update = function() {};\n$Render = function() {}",
 	szOldLiveCode : "",
 	txtLiveCode : "",
@@ -26,10 +41,9 @@ var Sys = {
 
 	Init : function() {
 		// get the canvas 2D context
-		var canvasLiveCode = document.getElementById( "livecode_canvas" );
-		canvasLiveCode.setAttribute( "width", window.innerWidth );
-		canvasLiveCode.setAttribute( "height", window.innerHeight );
-		Canvas2D.ctx = canvasLiveCode.getContext( "2d" );
+		Sys.pCanvas = document.getElementById( "livecode_canvas" );
+		Sys.Resize( Sys.pCanvas, window.innerWidth, window.innerHeight );
+		Render2D.pContext = Sys.pCanvas.getContext( "2d" );
 
 		// get live code text area
 		Sys.txtLiveCode = document.getElementById( "livecode" );
@@ -38,7 +52,9 @@ var Sys = {
 		Sys.txtLiveCode.value = Sys.szLiveCode;
 		Sys.UpdateLiveCode();
 
-		// set event listeners
+		// set event listeners:
+		//
+		// 1. update live code key combo
 		document.addEventListener( "keypress", function(e) {
 			// evaluate new live code: CTRL + SPACE
 			if( e.ctrlKey && e.keyCode == 0 )
@@ -46,6 +62,15 @@ var Sys = {
 				Sys.UpdateLiveCode();
 			}
 		}, false );
+
+		// 2. window resize
+		window.addEventListener( "resize", function( e ) {
+			Sys.Resize( Sys.pCanvas, window.innerWidth, window.innerHeight );
+		}, false );
+	},
+	Resize : function( pCanvas, nWidth, nHeight ) {
+		pCanvas.setAttribute( "width", nWidth );
+		pCanvas.setAttribute( "height", nHeight );
 	},
 	UpdateLiveCode : function() {
 		// save old live code in case of error
