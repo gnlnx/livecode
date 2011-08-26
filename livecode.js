@@ -11,6 +11,13 @@ var Physics2D = {
 };
 */
 
+// utility functions
+var Util = {
+	Random : function( nStart, nEnd ) {
+		return nStart + Math.floor( Math.random() * nEnd );
+	}
+};
+
 // define Render2D object
 var Render2D = {
 	pContext : null,
