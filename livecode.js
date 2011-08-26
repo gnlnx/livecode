@@ -14,14 +14,16 @@ var Physics2D = {
 // define Render2D object
 var Render2D = {
 	pContext : null,
-	drawBall : function( x, y, radius, bFill ) {
-		Render2D.pContext.fillStyle = "#f00";
+	drawBall : function( x, y, nRadius, szColor, bFill ) {
 		Render2D.pContext.beginPath();
-		Render2D.pContext.arc( x, y, radius, 0, 2 * Math.PI, false );
-		if( bFill )
+		Render2D.pContext.arc( x, y, nRadius, 0, 2 * Math.PI, false );
+		if( bFill ) {
+			Render2D.pContext.fillStyle = szColor;
 			Render2D.pContext.fill();
-		else
+		} else {
+			Render2D.pContext.strokeStyle = szColor;
 			Render2D.pContext.stroke();
+		}
 	}
 };
 
