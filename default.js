@@ -3,13 +3,14 @@ var Balls = [];
 var MAX_BALLS = 100;
 $Init = function() {
   for( var b = 0; b < MAX_BALLS; ++b ) {
-    Balls[b] = { x: 10 + Math.floor( Math.random() * Render2D.nWidth-10 ),
-                 y: 10 + Math.floor( Math.random() * Render2D.nHeight-10 ),
-                 r: 10 + Math.floor( Math.random() * 50 ),
+    Balls[b] = { x: Util.Random( 10, Render2D.nWidth-10 ),
+                 y: Util.Random( 10, Render2D.nHeight-10 ),
+                 r: Util.Random( 10, 50 ),
                  color: "#0ff",
                  fill: ( (b % 2) == 0 ) ? true : false,
-                 v: { x: 2+Math.floor(Math.random()*5), y: 0 }
+                 v: { x: Util.Random( 2, 5 ), y: 0 }
                };
+    //Physics2D.addObject( Balls[b].x, Balls[b].y, Balls[b].r, Balls[b].v.x, Balls[b].v.y );
   }
 }
 
@@ -19,7 +20,7 @@ $Update = function() {
     Balls[b].y += Balls[b].v.y;
     if( Balls[b].x-Balls[b].r > Render2D.nWidth ) {
       Balls[b].x = -Balls[b].r;
-      Balls[b].color = Colors[Math.floor(Math.random()*Colors.length)];
+      Balls[b].color = Colors[Util.Random( 0, Colors.length )];
       Balls[b].fill = !Balls[b].fill;
     }
   }
