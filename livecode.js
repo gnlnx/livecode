@@ -21,6 +21,8 @@ var Util = {
 // define Render2D object
 var Render2D = {
 	pContext : null,
+	nWidth : 0,
+	nHeight : 0,
 	drawBall : function( x, y, nRadius, szColor, bFill ) {
 		Render2D.pContext.beginPath();
 		Render2D.pContext.arc( x, y, nRadius, 0, 2 * Math.PI, false );
@@ -53,6 +55,8 @@ var Sys = {
 		Sys.pCanvas = document.getElementById( "livecode_canvas" );
 		Sys.Resize( Sys.pCanvas, window.innerWidth, window.innerHeight );
 		Render2D.pContext = Sys.pCanvas.getContext( "2d" );
+		Render2D.nWidth = window.innerWidth;
+		Render2D.nHeight = window.innerHeight;
 
 		// get live code text area
 		Sys.txtLiveCode = document.getElementById( "livecode" );
@@ -80,6 +84,8 @@ var Sys = {
 	Resize : function( pCanvas, nWidth, nHeight ) {
 		pCanvas.setAttribute( "width", nWidth );
 		pCanvas.setAttribute( "height", nHeight );
+		Render2D.nWdith = nWidth;
+		Render2D.nHeight = nHeight;
 	},
 	UpdateLiveCode : function() {
 		// save old live code in case of error
@@ -94,9 +100,11 @@ var Sys = {
 			console.log( e );
 			Sys.szLiveCode = Sys.szOldLiveCode;
 
+			/*
 			$Init = function() {};
 			$Update = function() {};
 			$Render = function() {};
+			*/
 		}
 	},
 	PausePlay : function() {
