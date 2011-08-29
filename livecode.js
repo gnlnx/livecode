@@ -1,16 +1,3 @@
-/*
-// define Physics2D object
-var Physics2D = {
-	pObjects : [],
-	bGravity : true,
-	addObject : function( x, y, mass ) {
-		Physics2D.pObjects.push( {x, y, mass} );
-	}
-	update : function() {
-	}
-};
-*/
-
 // utility functions
 var Util = {
 	Random : function( nStart, nEnd ) {
@@ -18,21 +5,30 @@ var Util = {
 	}
 };
 
-// define Render2D object
-var Render2D = {
-	pContext : null,
+// define Render3D object
+var Render3D = {
+	pContext : null, // gl context
 	nWidth : 0,
 	nHeight : 0,
-	drawBall : function( x, y, nRadius, szColor, bFill ) {
-		Render2D.pContext.beginPath();
-		Render2D.pContext.arc( x, y, nRadius, 0, 2 * Math.PI, false );
-		if( bFill ) {
-			Render2D.pContext.fillStyle = szColor;
-			Render2D.pContext.fill();
-		} else {
-			Render2D.pContext.strokeStyle = szColor;
-			Render2D.pContext.stroke();
-		}
+	Init : function( pCanvas ) {
+		Render3D.pContext = pCanvas.getContext( "experimental-webgl" );
+
+		// TODO: 
+		// 1. Load default vertex & fragment shaders
+		// 2. Bind vertex attributes and uniforms
+		// 3. Set clear color and depth
+	},
+	SetViewportAndPerspective : function( nWidth, nHeight, nFrustum, nAspect, nDepthNear, nDepthFar ) {
+		if( !Render3D.pContext )
+			return;
+
+		Render3D.pContext.viewport( 0, 0, nWidth, nHeight );
+		Render3D.pContext.perspectiveMatrix = new CanvasMatrix4();
+		Render3D.pContext.perspectiveMatrix.lookat( 0, 0, 7, 0, 0, 0, 0, 1, 0 );
+		Render3D.pContext.perspectiveMatrix.perspective( nFrustum, nAspect, nDepthNear, nDepthFar );
+
+	},
+	drawBall : function( x, y, z, nRadius, szColor ) {
 	}
 };
 
@@ -54,9 +50,7 @@ var Sys = {
 		// get the canvas 2D context
 		Sys.pCanvas = document.getElementById( "livecode_canvas" );
 		Sys.Resize( Sys.pCanvas, window.innerWidth, window.innerHeight );
-		Render2D.pContext = Sys.pCanvas.getContext( "2d" );
-		Render2D.nWidth = window.innerWidth;
-		Render2D.nHeight = window.innerHeight;
+		Render3D.Init( Sys.pCanvas );
 
 		// get live code text area
 		Sys.txtLiveCode = document.getElementById( "livecode" );
@@ -84,8 +78,8 @@ var Sys = {
 	Resize : function( pCanvas, nWidth, nHeight ) {
 		pCanvas.setAttribute( "width", nWidth );
 		pCanvas.setAttribute( "height", nHeight );
-		Render2D.nWdith = nWidth;
-		Render2D.nHeight = nHeight;
+
+		Render3D.SetViewportAndPerspective( nWidth, nHeight, 30, nWidth / nHeight, 1, 5000 );
 	},
 	UpdateLiveCode : function() {
 		// save old live code in case of error
@@ -99,12 +93,6 @@ var Sys = {
 		} catch( e ) {
 			console.log( e );
 			Sys.szLiveCode = Sys.szOldLiveCode;
-
-			/*
-			$Init = function() {};
-			$Update = function() {};
-			$Render = function() {};
-			*/
 		}
 	},
 	PausePlay : function() {
@@ -115,7 +103,7 @@ var Sys = {
 	Update : function() { $Update(); },
 	Render : function() { 
 		// clear canvas before user.render
-		Sys.pCanvas.width = Sys.pCanvas.width;
+		Render3D.pContext.clear( Render3D.pContext.COLOR_BUFFER_BIT | Render3D.pContext.DEPTH_BUFFER_BIT );
 		$Render();
 	},
 	///////////////////////////////////////////////////////////////
