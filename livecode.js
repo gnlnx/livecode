@@ -1,24 +1,28 @@
 // utility functions
 var Util = {
+	GetFile : function( szFilename, onComplete ) {
+		var bAsync = false;
+		var XHR = new XMLHttpRequest();
+		XHR.onreadystatechange = function() {
+			if( XHR.readyState == 4 && XHR.status == 200 ) {
+				onComplete( XHR.responseText );
+			}
+		};
+		XHR.open( "GET", szFilename, bAsync );
+		XHR.send();
+	},
 	Random : function( nStart, nEnd ) {
 		return nStart + Math.floor( Math.random() * nEnd );
 	},
 	LoadShader : function( pContext, szShader, nShaderType, pShaderProgram ) {
-		var bAsync = false;
-		var XHR = new XMLHttpRequest();
-		XHR.onreadystatechange = function() {
-			if( XHR.readyState == 4  && XHR.status == 200 ) {
-				// TODO: add error checking :)
-				var szShaderSource = XHR.responseText;
-				var pShader = pContext.createShader( nShaderType );
-				pContext.shaderSource( pShader, szShaderSource );
-				pContext.compileShader( pShader );
+		Util.GetFile( szShader, function( szShaderSource ) {
+			// TODO: add error checking :)
+			var pShader = pContext.createShader( nShaderType );
+			pContext.shaderSource( pShader, szShaderSource );
+			pContext.compileShader( pShader );
 
-				pContext.attachShader( pShaderProgram, pShader );
-			}
-		};
-		XHR.open( "GET", szShader, bAsync );
-		XHR.send();
+			pContext.attachShader( pShaderProgram, pShader );
+		});
 	},
 	/*
 	 * Copyright (C) 2009 Apple Inc. All Rights Reserved.
