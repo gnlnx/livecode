@@ -138,8 +138,8 @@ var Render3D = {
 
 		// TODO: 
 		// 1. Load default vertex & fragment shaders
-		Util.LoadShader( Render3D.pContext, "default.vs", Render3D.pContext.VERTEX_SHADER, Render3D.pShaderProgram ); 
-		Util.LoadShader( render3D.pContext, "default.fs", Render3D.pContext.FRAGMENT_SHADER, Render3D.pShaderProgram );
+		Util.LoadShader( Render3D.pContext, "shaders/default.vs", Render3D.pContext.VERTEX_SHADER, Render3D.pShaderProgram ); 
+		Util.LoadShader( Render3D.pContext, "shaders/default.fs", Render3D.pContext.FRAGMENT_SHADER, Render3D.pShaderProgram );
 
 		// 2. Bind vertex attributes
 		Render3D.pContext.bindAttribLocation( Render3D.pShaderProgram, 0, "vPosition" );
@@ -188,7 +188,7 @@ var Render3D = {
 	},
 	Clear : function( bColor, bDepth ) {
 		// TODO: use bColor && bDepth
-		Render3d.pContext.clear( Render3D.pContext.COLOR_BUFFER_BIT | Render3d.pContext.DEPTH_BUFFER_BIT );
+		Render3D.pContext.clear( Render3D.pContext.COLOR_BUFFER_BIT | Render3D.pContext.DEPTH_BUFFER_BIT );
 	},
 	drawBall : function( x, y, z, nRadius, szColor ) {
 		Render3D.pSphere.mModelView.makeIdentity();
