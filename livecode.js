@@ -160,7 +160,7 @@ var Render3D = {
 		Render3D.pContext.uniform3f( Render3D.pContext.getUniformLocation( Render3D.pShaderProgram, "vLightDir" ), 0, 0, 1 );
 
 		// 5. Set up sphere
-		Render3D.pSphere = Util.makeSphere( Render3D.pContext, 20, 10, 10 );
+		Render3D.pSphere = Util.makeSphere( Render3D.pContext, 5, 10, 10 );
 		Render3D.pSphere.mModelView = new J3DIMatrix4();
 		Render3D.pSphere.nWorldMatrixLoc = Render3D.pContext.getUniformLocation( Render3D.pShaderProgram, "mWorld" );
 		Render3D.pSphere.mWorld = new J3DIMatrix4();
@@ -176,14 +176,14 @@ var Render3D = {
 		Render3D.pContext.vertexAttribPointer( 1, 3, Render3D.pContext.FLOAT, false, 0, 0 );
 		Render3D.pContext.bindBuffer( Render3D.pContext.ELEMENT_ARRAY_BUFFER, Render3D.pSphere.indexObject );
 	},
-	SetViewportAndPerspective : function( nWidth, nHeight, nFrustum, nAspect, nDepthNear, nDepthFar ) {
+	SetViewportAndPerspective : function( nWidth, nHeight, nFOV, nAspect, nDepthNear, nDepthFar ) {
 		if( !Render3D.pContext )
 			return;
 
 		Render3D.pContext.viewport( 0, 0, nWidth, nHeight );
 		Render3D.pContext.perspectiveMatrix = new J3DIMatrix4();
-		Render3D.pContext.perspectiveMatrix.lookat( 0, 0, 7, 0, 0, 0, 0, 1, 0 );
-		Render3D.pContext.perspectiveMatrix.perspective( nFrustum, nAspect, nDepthNear, nDepthFar );
+		Render3D.pContext.perspectiveMatrix.lookat( 0, 0, 10, 0, 0, 0, 0, 1, 0 );
+		Render3D.pContext.perspectiveMatrix.perspective( nFOV, nAspect, nDepthNear, nDepthFar );
 
 	},
 	Clear : function( bColor, bDepth ) {
