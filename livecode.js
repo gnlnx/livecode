@@ -15,7 +15,7 @@ var Util = {
 		return nStart + Math.floor( Math.random() * nEnd );
 	},
 	LoadShader : function( pContext, szShader, nShaderType, pShaderProgram ) {
-		Util.GetFile( szShader, function( szShaderSource ) {
+		Util.GetFile( szShader, function onLoad( szShaderSource ) {
 			// TODO: add error checking :)
 			var pShader = pContext.createShader( nShaderType );
 			pContext.shaderSource( pShader, szShaderSource );
@@ -97,6 +97,10 @@ var Util = {
 
 	    var retval = { };
 
+	    retval.vertexObject = ctx.createBuffer();
+	    ctx.bindBuffer(ctx.ARRAY_BUFFER, retval.vertexObject);
+	    ctx.bufferData(ctx.ARRAY_BUFFER, new Float32Array(geometryData), ctx.STATIC_DRAW);
+
 	    retval.normalObject = ctx.createBuffer();
 	    ctx.bindBuffer(ctx.ARRAY_BUFFER, retval.normalObject);
 	    ctx.bufferData(ctx.ARRAY_BUFFER, new Float32Array(normalData), ctx.STATIC_DRAW);
@@ -104,10 +108,6 @@ var Util = {
 	    retval.texCoordObject = ctx.createBuffer();
 	    ctx.bindBuffer(ctx.ARRAY_BUFFER, retval.texCoordObject);
 	    ctx.bufferData(ctx.ARRAY_BUFFER, new Float32Array(texCoordData), ctx.STATIC_DRAW);
-
-	    retval.vertexObject = ctx.createBuffer();
-	    ctx.bindBuffer(ctx.ARRAY_BUFFER, retval.vertexObject);
-	    ctx.bufferData(ctx.ARRAY_BUFFER, new Float32Array(geometryData), ctx.STATIC_DRAW);
 
 	    retval.numIndices = indexData.length;
 	    retval.indexObject = ctx.createBuffer();
@@ -121,89 +121,93 @@ var Util = {
 
 // define Render3D object
 var Render3D = {
-	pContext : null, // gl context
+	gl : null, // gl context
 	pShaderProgram : null,
 	nWidth : 0,
 	nHeight : 0,
 	pSphere : null,
 	Init : function( pCanvas ) {
-		var szWebGLImpl = [ "webgl", "experimental-webgl", "webkit-3d", "moz-webgl" ];
-		for( var i = 0; i < szWebGLImpl.length; ++i ) {
-			try { Render3D.pContext = pCanvas.getContext( szWebGLImpl[i] ); } catch( e ) {}
-			
-			if( Render3D.pContext ) { break; }
-		}
+		// NOTE: using WebGL Inspector replaces the Canvas.getContext method
+		Render3D.gl = pCanvas.getContext( "experimental-webgl" );
 
-		Render3D.pShaderProgram = Render3D.pContext.createProgram();
+		// 0. Create the shader program
+		Render3D.pShaderProgram = Render3D.gl.createProgram();
 
-		// TODO: 
 		// 1. Load default vertex & fragment shaders
-		Util.LoadShader( Render3D.pContext, "shaders/default.vs", Render3D.pContext.VERTEX_SHADER, Render3D.pShaderProgram ); 
-		Util.LoadShader( Render3D.pContext, "shaders/default.fs", Render3D.pContext.FRAGMENT_SHADER, Render3D.pShaderProgram );
+		//    ...attach to the shader program onLoad
+		Util.LoadShader( Render3D.gl, "shaders/default.vs", Render3D.gl.VERTEX_SHADER, Render3D.pShaderProgram ); 
+		Util.LoadShader( Render3D.gl, "shaders/default.fs", Render3D.gl.FRAGMENT_SHADER, Render3D.pShaderProgram );
+
+		// 1.a. Link and set the shader program once shaders
+		//      are loaded and attached
+		Render3D.gl.linkProgram( Render3D.pShaderProgram );
+		Render3D.gl.useProgram( Render3D.pShaderProgram );
 
 		// 2. Bind vertex attributes
-		Render3D.pContext.bindAttribLocation( Render3D.pShaderProgram, 0, "vPosition" );
-		Render3D.pContext.bindAttribLocation( Render3D.pShaderProgram, 1, "vNormal" );
-
-		Render3D.pContext.linkProgram( Render3D.pShaderProgram );
-		Render3D.pContext.useProgram( Render3D.pShaderProgram );
+		Render3D.pShaderProgram.vPositionLoc = Render3D.gl.getAttribLocation( Render3D.pShaderProgram, "vPosition" );
+		Render3D.pShaderProgram.vNormalLoc = Render3D.gl.getAttribLocation( Render3D.pShaderProgram, "vNormal" );
 
 		// 3. Set clear color and depth
-		Render3D.pContext.clearColor( 0, 0, 0.5, 1 );
-		Render3D.pContext.clearDepth( 5000 );
+		Render3D.gl.clearColor( 0, 0, 0.5, 1 );
+		Render3D.gl.clearDepth( 5000 );
 
-		Render3D.pContext.enable( Render3D.pContext.DEPTH_TEST );
-		Render3D.pContext.enable( Render3D.pContext.BLEND );
-		Render3D.pContext.blendFunc( Render3D.pContext.SRC_ALPHA, Render3D.pContext.ONE_MINUS_SRC_ALPHA );
+		Render3D.gl.enable( Render3D.gl.DEPTH_TEST );
+		Render3D.gl.enable( Render3D.gl.BLEND );
+		Render3D.gl.blendFunc( Render3D.gl.SRC_ALPHA, Render3D.gl.ONE_MINUS_SRC_ALPHA );
 
 		// 4. Bind uniforms
-		Render3D.pContext.uniform3f( Render3D.pContext.getUniformLocation( Render3D.pShaderProgram, "vLightDir" ), 0, 0, 1 );
+		Render3D.gl.uniform3f( Render3D.gl.getUniformLocation( Render3D.pShaderProgram, "vLightDir" ), 0, 0, 1 );
 
 		// 5. Set up sphere
-		Render3D.pSphere = Util.makeSphere( Render3D.pContext, 5, 10, 10 );
+		Render3D.pSphere = Util.makeSphere( Render3D.gl, 1, 10, 10 );
 		Render3D.pSphere.mModelView = new J3DIMatrix4();
-		Render3D.pSphere.nWorldMatrixLoc = Render3D.pContext.getUniformLocation( Render3D.pShaderProgram, "mWorld" );
+		Render3D.pSphere.nWorldMatrixLoc = Render3D.gl.getUniformLocation( Render3D.pShaderProgram, "mWorld" );
 		Render3D.pSphere.mWorld = new J3DIMatrix4();
-		Render3D.pSphere.nModelViewProjMatrixLoc = Render3D.pContext.getUniformLocation( Render3D.pShaderProgram, "mModelViewProj" );
+		Render3D.pSphere.nModelViewProjMatrixLoc = Render3D.gl.getUniformLocation( Render3D.pShaderProgram, "mModelViewProj" );
 		Render3D.pSphere.mModelViewProj = new J3DIMatrix4();
-
-		Render3D.pContext.enableVertexAttribArray( 0 );
-		Render3D.pContext.enableVertexAttribArray( 1 );
-
-		Render3D.pContext.bindBuffer( Render3D.pContext.ARRAY_BUFFER, Render3D.pSphere.vertexObject );
-		Render3D.pContext.vertexAttribPointer( 0, 3, Render3D.pContext.FLOAT, false, 0, 0 );
-		Render3D.pContext.bindBuffer( Render3D.pContext.ARRAY_BUFFER, Render3D.pSphere.normalObject );
-		Render3D.pContext.vertexAttribPointer( 1, 3, Render3D.pContext.FLOAT, false, 0, 0 );
-		Render3D.pContext.bindBuffer( Render3D.pContext.ELEMENT_ARRAY_BUFFER, Render3D.pSphere.indexObject );
 	},
 	SetViewportAndPerspective : function( nWidth, nHeight, nFOV, nAspect, nDepthNear, nDepthFar ) {
-		if( !Render3D.pContext )
+		if( !Render3D.gl )
 			return;
 
-		Render3D.pContext.viewport( 0, 0, nWidth, nHeight );
-		Render3D.pContext.perspectiveMatrix = new J3DIMatrix4();
-		Render3D.pContext.perspectiveMatrix.lookat( 0, 0, 10, 0, 0, 0, 0, 1, 0 );
-		Render3D.pContext.perspectiveMatrix.perspective( nFOV, nAspect, nDepthNear, nDepthFar );
+		Render3D.gl.viewport( 0, 0, nWidth, nHeight );
+		Render3D.gl.perspectiveMatrix = new J3DIMatrix4();
+		Render3D.gl.perspectiveMatrix.lookat( 0, 0, 10, 0, 0, 0, 0, 1, 0 );
+		Render3D.gl.perspectiveMatrix.perspective( nFOV, nAspect, nDepthNear, nDepthFar );
 
 	},
 	Clear : function( bColor, bDepth ) {
 		// TODO: use bColor && bDepth
-		Render3D.pContext.clear( Render3D.pContext.COLOR_BUFFER_BIT | Render3D.pContext.DEPTH_BUFFER_BIT );
+		Render3D.gl.clear( Render3D.gl.COLOR_BUFFER_BIT | Render3D.gl.DEPTH_BUFFER_BIT );
 	},
 	drawBall : function( x, y, z, nRadius, szColor ) {
+		
+		// 1. Bind buffers
+		Render3D.gl.enableVertexAttribArray( Render3D.pShaderProgram.vPositionLoc );
+		Render3D.gl.enableVertexAttribArray( Render3D.pShaderProgram.vNormalLoc );
+
+		Render3D.gl.bindBuffer( Render3D.gl.ARRAY_BUFFER, Render3D.pSphere.vertexObject );
+		Render3D.gl.vertexAttribPointer( 0, 3, Render3D.gl.FLOAT, false, 0, 0 );
+		Render3D.gl.bindBuffer( Render3D.gl.ARRAY_BUFFER, Render3D.pSphere.normalObject );
+		Render3D.gl.vertexAttribPointer( 1, 3, Render3D.gl.FLOAT, false, 0, 0 );
+		Render3D.gl.bindBuffer( Render3D.gl.ELEMENT_ARRAY_BUFFER, Render3D.pSphere.indexObject );
+
+		// 2. Bind uniforms
 		Render3D.pSphere.mModelView.makeIdentity();
 		Render3D.pSphere.mModelView.translate( x, y, z );
+		Render3D.pSphere.mModelView.scale( nRadius, nRadius, nRadius );
 
 		Render3D.pSphere.mWorld.load( Render3D.pSphere.mModelView );
 		Render3D.pSphere.mWorld.invert();
 		Render3D.pSphere.mWorld.transpose();
-		Render3D.pSphere.mWorld.setUniform( Render3D.pContext, Render3D.pSphere.nWorldMatrixLoc, false );
+		Render3D.pSphere.mWorld.setUniform( Render3D.gl, Render3D.pSphere.nWorldMatrixLoc, false );
 
-		Render3D.pSphere.mModelViewProj.load( Render3D.pContext.perspectiveMatrix );
+		Render3D.pSphere.mModelViewProj.load( Render3D.gl.perspectiveMatrix );
 		Render3D.pSphere.mModelViewProj.multiply( Render3D.pSphere.mModelView );
-		Render3D.pSphere.mModelViewProj.setUniform( Render3D.pContext, Render3D.pSphere.nModelViewProjMatrxiLoc, false );
+		Render3D.pSphere.mModelViewProj.setUniform( Render3D.gl, Render3D.pSphere.nModelViewProjMatrixLoc, false );
 
-		Render3D.pContext.drawElements( Render3D.pContext.TRIANGLES, Render3D.pSphere.numIndices, Render3D.pContext.UNSIGNED_BYTE, 0 );
+		// 3. Draw!
+		Render3D.gl.drawElements( Render3D.gl.TRIANGLES, Render3D.pSphere.numIndices, Render3D.gl.UNSIGNED_BYTE, 0 );
 	}
 };
 
@@ -216,7 +220,7 @@ var $Render = function() {}
 var Sys = {
 	// vars
 	pCanvas : null,
-	szLiveCode : "$Init = function() {};\n$Update = function() {};\n$Render = function() {}",
+	szLiveCode : "$Init = function() {};\n$Update = function() {};\n$Render = function() { Render3D.drawBall( 0, 0, 0, 3, '#f00' ); }",
 	szOldLiveCode : "",
 	txtLiveCode : "",
 	bRunning : true,
@@ -292,10 +296,10 @@ var Sys = {
 		}
 	}
 
-}
+};
 
 // start session
-document.addEventListener( "DOMContentLoaded", function() {
+document.addEventListener( "DOMContentLoaded", function OnGameStart() {
 	Sys.Init();
 	Sys.MainLoop();
 }, false );
