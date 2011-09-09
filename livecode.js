@@ -24,97 +24,11 @@ var Util = {
 			pContext.attachShader( pShaderProgram, pShader );
 		});
 	},
-	/*
-	 * Copyright (C) 2009 Apple Inc. All Rights Reserved.
-	 *
-	 * Redistribution and use in source and binary forms, with or without
-	 * modification, are permitted provided that the following conditions
-	 * are met:
-	 * 1. Redistributions of source code must retain the above copyright
-	 *    notice, this list of conditions and the following disclaimer.
-	 * 2. Redistributions in binary form must reproduce the above copyright
-	 *    notice, this list of conditions and the following disclaimer in the
-	 *    documentation and/or other materials provided with the distribution.
-	 *
-	 * THIS SOFTWARE IS PROVIDED BY APPLE INC. ``AS IS'' AND ANY
-	 * EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-	 * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
-	 * PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL APPLE INC. OR
-	 * CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
-	 * EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
-	 * PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
-	 * PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY
-	 * OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-	 * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-	 * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-	 */
-	makeSphere : function(ctx, radius, lats, longs)
-	{
-	    var geometryData = [ ];
-	    var normalData = [ ];
-	    var texCoordData = [ ];
-	    var indexData = [ ];
-
-	    for (var latNumber = 0; latNumber <= lats; ++latNumber) {
-		for (var longNumber = 0; longNumber <= longs; ++longNumber) {
-		    var theta = latNumber * Math.PI / lats;
-		    var phi = longNumber * 2 * Math.PI / longs;
-		    var sinTheta = Math.sin(theta);
-		    var sinPhi = Math.sin(phi);
-		    var cosTheta = Math.cos(theta);
-		    var cosPhi = Math.cos(phi);
-
-		    var x = cosPhi * sinTheta;
-		    var y = cosTheta;
-		    var z = sinPhi * sinTheta;
-		    var u = 1-(longNumber/longs);
-		    var v = latNumber/lats;
-
-		    normalData.push(x);
-		    normalData.push(y);
-		    normalData.push(z);
-		    texCoordData.push(u);
-		    texCoordData.push(v);
-		    geometryData.push(radius * x);
-		    geometryData.push(radius * y);
-		    geometryData.push(radius * z);
-		}
-	    }
-
-	    for (var latNumber = 0; latNumber < lats; ++latNumber) {
-		for (var longNumber = 0; longNumber < longs; ++longNumber) {
-		    var first = (latNumber * (longs+1)) + longNumber;
-		    var second = first + longs + 1;
-		    indexData.push(first);
-		    indexData.push(second);
-		    indexData.push(first+1);
-
-		    indexData.push(second);
-		    indexData.push(second+1);
-		    indexData.push(first+1);
-		}
-	    }
-
-	    var retval = { };
-
-	    retval.vertexObject = ctx.createBuffer();
-	    ctx.bindBuffer(ctx.ARRAY_BUFFER, retval.vertexObject);
-	    ctx.bufferData(ctx.ARRAY_BUFFER, new Float32Array(geometryData), ctx.STATIC_DRAW);
-
-	    retval.normalObject = ctx.createBuffer();
-	    ctx.bindBuffer(ctx.ARRAY_BUFFER, retval.normalObject);
-	    ctx.bufferData(ctx.ARRAY_BUFFER, new Float32Array(normalData), ctx.STATIC_DRAW);
-
-	    retval.texCoordObject = ctx.createBuffer();
-	    ctx.bindBuffer(ctx.ARRAY_BUFFER, retval.texCoordObject);
-	    ctx.bufferData(ctx.ARRAY_BUFFER, new Float32Array(texCoordData), ctx.STATIC_DRAW);
-
-	    retval.numIndices = indexData.length;
-	    retval.indexObject = ctx.createBuffer();
-	    ctx.bindBuffer(ctx.ELEMENT_ARRAY_BUFFER, retval.indexObject);
-	    ctx.bufferData(ctx.ELEMENT_ARRAY_BUFFER, new Uint16Array(indexData), ctx.STREAM_DRAW);
-
-	    return retval;
+	makeSphere : function( pContext, nRadius, nLats, nLongs ) {
+		return makeSphere( pContext, nRadius, nLats, nLongs );
+	},
+	makeBox : function( pContext ) {
+		return makeBox( pContext );
 	}
 	
 };
@@ -148,15 +62,15 @@ var Render3D = {
 		Render3D.pShaderProgram.vNormalLoc = Render3D.gl.getAttribLocation( Render3D.pShaderProgram, "vNormal" );
 
 		// 3. Set clear color and depth
-		Render3D.gl.clearColor( 0, 0, 0.5, 1 );
-		Render3D.gl.clearDepth( 5000 );
+		Render3D.gl.clearColor( 0, 0, 1, 1 );
+		Render3D.gl.clearDepth( 1000 );
 
 		Render3D.gl.enable( Render3D.gl.DEPTH_TEST );
 		Render3D.gl.enable( Render3D.gl.BLEND );
 		Render3D.gl.blendFunc( Render3D.gl.SRC_ALPHA, Render3D.gl.ONE_MINUS_SRC_ALPHA );
 
 		// 4. Bind uniforms
-		Render3D.gl.uniform3f( Render3D.gl.getUniformLocation( Render3D.pShaderProgram, "vLightDir" ), 0, 0, 1 );
+		Render3D.gl.uniform3f( Render3D.gl.getUniformLocation( Render3D.pShaderProgram, "vLightDir" ), 0, 1, -1 );
 
 		// 5. Set up sphere
 		Render3D.pSphere = Util.makeSphere( Render3D.gl, 1, 10, 10 );
@@ -172,7 +86,7 @@ var Render3D = {
 
 		Render3D.gl.viewport( 0, 0, nWidth, nHeight );
 		Render3D.gl.perspectiveMatrix = new J3DIMatrix4();
-		Render3D.gl.perspectiveMatrix.lookat( 0, 0, 10, 0, 0, 0, 0, 1, 0 );
+		Render3D.gl.perspectiveMatrix.lookat( 0, 3, 10, 0, 0, 0, 0, 1, 0 );
 		Render3D.gl.perspectiveMatrix.perspective( nFOV, nAspect, nDepthNear, nDepthFar );
 
 	},
@@ -186,15 +100,15 @@ var Render3D = {
 		Render3D.gl.enableVertexAttribArray( Render3D.pShaderProgram.vPositionLoc );
 		Render3D.gl.enableVertexAttribArray( Render3D.pShaderProgram.vNormalLoc );
 
-		Render3D.gl.bindBuffer( Render3D.gl.ARRAY_BUFFER, Render3D.pSphere.vertexObject );
-		Render3D.gl.vertexAttribPointer( 0, 3, Render3D.gl.FLOAT, false, 0, 0 );
 		Render3D.gl.bindBuffer( Render3D.gl.ARRAY_BUFFER, Render3D.pSphere.normalObject );
 		Render3D.gl.vertexAttribPointer( 1, 3, Render3D.gl.FLOAT, false, 0, 0 );
+		Render3D.gl.bindBuffer( Render3D.gl.ARRAY_BUFFER, Render3D.pSphere.vertexObject );
+		Render3D.gl.vertexAttribPointer( 0, 3, Render3D.gl.FLOAT, false, 0, 0 );
 		Render3D.gl.bindBuffer( Render3D.gl.ELEMENT_ARRAY_BUFFER, Render3D.pSphere.indexObject );
 
 		// 2. Bind uniforms
 		Render3D.pSphere.mModelView.makeIdentity();
-		Render3D.pSphere.mModelView.translate( x, y, z );
+		//Render3D.pSphere.mModelView.translate( x, y, z );
 		Render3D.pSphere.mModelView.scale( nRadius, nRadius, nRadius );
 
 		Render3D.pSphere.mWorld.load( Render3D.pSphere.mModelView );
@@ -258,7 +172,7 @@ var Sys = {
 		pCanvas.setAttribute( "width", nWidth );
 		pCanvas.setAttribute( "height", nHeight );
 
-		Render3D.SetViewportAndPerspective( nWidth, nHeight, 30, nWidth / nHeight, 1, 5000 );
+		Render3D.SetViewportAndPerspective( nWidth, nHeight, 60, nWidth / nHeight, 0.1, 1000 );
 	},
 	UpdateLiveCode : function() {
 		// save old live code in case of error
