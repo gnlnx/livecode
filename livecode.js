@@ -1,7 +1,7 @@
 // utility functions
 var Util = {
-	GetFile : function( szFilename, onComplete ) {
-		var bAsync = false;
+	GetFile : function( szFilename, onComplete, bAsynchronous ) {
+		var bAsync = bAsynchronous || false;
 		var XHR = new XMLHttpRequest();
 		XHR.onreadystatechange = function() {
 			if( XHR.readyState == 4 && XHR.status == 200 ) {
