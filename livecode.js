@@ -100,10 +100,10 @@ var Render3D = {
 		Render3D.gl.enableVertexAttribArray( Render3D.pShaderProgram.vPositionLoc );
 		Render3D.gl.enableVertexAttribArray( Render3D.pShaderProgram.vNormalLoc );
 
-		Render3D.gl.bindBuffer( Render3D.gl.ARRAY_BUFFER, Render3D.pBox.normalObject );
-		Render3D.gl.vertexAttribPointer( 1, 3, Render3D.gl.FLOAT, false, 0, 0 );
 		Render3D.gl.bindBuffer( Render3D.gl.ARRAY_BUFFER, Render3D.pBox.vertexObject );
 		Render3D.gl.vertexAttribPointer( 0, 3, Render3D.gl.FLOAT, false, 0, 0 );
+		Render3D.gl.bindBuffer( Render3D.gl.ARRAY_BUFFER, Render3D.pBox.normalObject );
+		Render3D.gl.vertexAttribPointer( 1, 3, Render3D.gl.FLOAT, false, 0, 0 );
 		Render3D.gl.bindBuffer( Render3D.gl.ELEMENT_ARRAY_BUFFER, Render3D.pBox.indexObject );
 
 		// 2. Bind uniforms
