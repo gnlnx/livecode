@@ -39,7 +39,7 @@ var Render3D = {
 	pShaderProgram : null,
 	nWidth : 0,
 	nHeight : 0,
-	pSphere : null,
+	pBox : null,
 	Init : function( pCanvas ) {
 		// NOTE: using WebGL Inspector replaces the Canvas.getContext method
 		Render3D.gl = pCanvas.getContext( "experimental-webgl" );
@@ -72,13 +72,13 @@ var Render3D = {
 		// 4. Bind uniforms
 		Render3D.gl.uniform3f( Render3D.gl.getUniformLocation( Render3D.pShaderProgram, "vLightDir" ), 0, 1, -1 );
 
-		// 5. Set up sphere
-		Render3D.pSphere = Util.makeSphere( Render3D.gl, 1, 10, 10 );
-		Render3D.pSphere.mModelView = new J3DIMatrix4();
-		Render3D.pSphere.nWorldMatrixLoc = Render3D.gl.getUniformLocation( Render3D.pShaderProgram, "mWorld" );
-		Render3D.pSphere.mWorld = new J3DIMatrix4();
-		Render3D.pSphere.nModelViewProjMatrixLoc = Render3D.gl.getUniformLocation( Render3D.pShaderProgram, "mModelViewProj" );
-		Render3D.pSphere.mModelViewProj = new J3DIMatrix4();
+		// 5. Set up box
+		Render3D.pBox = Util.makeBox( Render3D.gl );
+		Render3D.pBox.mModelView = new J3DIMatrix4();
+		Render3D.pBox.nWorldMatrixLoc = Render3D.gl.getUniformLocation( Render3D.pShaderProgram, "mWorld" );
+		Render3D.pBox.mWorld = new J3DIMatrix4();
+		Render3D.pBox.nModelViewProjMatrixLoc = Render3D.gl.getUniformLocation( Render3D.pShaderProgram, "mModelViewProj" );
+		Render3D.pBox.mModelViewProj = new J3DIMatrix4();
 	},
 	SetViewportAndPerspective : function( nWidth, nHeight, nFOV, nAspect, nDepthNear, nDepthFar ) {
 		if( !Render3D.gl )
@@ -94,34 +94,35 @@ var Render3D = {
 		// TODO: use bColor && bDepth
 		Render3D.gl.clear( Render3D.gl.COLOR_BUFFER_BIT | Render3D.gl.DEPTH_BUFFER_BIT );
 	},
-	drawBall : function( x, y, z, nRadius, szColor ) {
+	drawBox : function( x, y, z, nSize, szColor ) {
 		
 		// 1. Bind buffers
 		Render3D.gl.enableVertexAttribArray( Render3D.pShaderProgram.vPositionLoc );
 		Render3D.gl.enableVertexAttribArray( Render3D.pShaderProgram.vNormalLoc );
 
-		Render3D.gl.bindBuffer( Render3D.gl.ARRAY_BUFFER, Render3D.pSphere.normalObject );
+		Render3D.gl.bindBuffer( Render3D.gl.ARRAY_BUFFER, Render3D.pBox.normalObject );
 		Render3D.gl.vertexAttribPointer( 1, 3, Render3D.gl.FLOAT, false, 0, 0 );
-		Render3D.gl.bindBuffer( Render3D.gl.ARRAY_BUFFER, Render3D.pSphere.vertexObject );
+		Render3D.gl.bindBuffer( Render3D.gl.ARRAY_BUFFER, Render3D.pBox.vertexObject );
 		Render3D.gl.vertexAttribPointer( 0, 3, Render3D.gl.FLOAT, false, 0, 0 );
-		Render3D.gl.bindBuffer( Render3D.gl.ELEMENT_ARRAY_BUFFER, Render3D.pSphere.indexObject );
+		Render3D.gl.bindBuffer( Render3D.gl.ELEMENT_ARRAY_BUFFER, Render3D.pBox.indexObject );
 
 		// 2. Bind uniforms
-		Render3D.pSphere.mModelView.makeIdentity();
-		//Render3D.pSphere.mModelView.translate( x, y, z );
-		Render3D.pSphere.mModelView.scale( nRadius, nRadius, nRadius );
+		Render3D.pBox.mModelView.makeIdentity();
+		Render3D.pBox.mModelView.translate( x, y, z );
+		Render3D.pBox.mModelView.rotate( 45, 1, 1, 1 );
+		Render3D.pBox.mModelView.scale( nSize, nSize, nSize );
 
-		Render3D.pSphere.mWorld.load( Render3D.pSphere.mModelView );
-		Render3D.pSphere.mWorld.invert();
-		Render3D.pSphere.mWorld.transpose();
-		Render3D.pSphere.mWorld.setUniform( Render3D.gl, Render3D.pSphere.nWorldMatrixLoc, false );
+		Render3D.pBox.mWorld.load( Render3D.pBox.mModelView );
+		Render3D.pBox.mWorld.invert();
+		Render3D.pBox.mWorld.transpose();
+		Render3D.pBox.mWorld.setUniform( Render3D.gl, Render3D.pBox.nWorldMatrixLoc, false );
 
-		Render3D.pSphere.mModelViewProj.load( Render3D.gl.perspectiveMatrix );
-		Render3D.pSphere.mModelViewProj.multiply( Render3D.pSphere.mModelView );
-		Render3D.pSphere.mModelViewProj.setUniform( Render3D.gl, Render3D.pSphere.nModelViewProjMatrixLoc, false );
+		Render3D.pBox.mModelViewProj.load( Render3D.gl.perspectiveMatrix );
+		Render3D.pBox.mModelViewProj.multiply( Render3D.pBox.mModelView );
+		Render3D.pBox.mModelViewProj.setUniform( Render3D.gl, Render3D.pBox.nModelViewProjMatrixLoc, false );
 
 		// 3. Draw!
-		Render3D.gl.drawElements( Render3D.gl.TRIANGLES, Render3D.pSphere.numIndices, Render3D.gl.UNSIGNED_BYTE, 0 );
+		Render3D.gl.drawElements( Render3D.gl.TRIANGLES, Render3D.pBox.numIndices, Render3D.gl.UNSIGNED_BYTE, 0 );
 	}
 };
 
@@ -134,7 +135,7 @@ var $Render = function() {}
 var Sys = {
 	// vars
 	pCanvas : null,
-	szLiveCode : "$Init = function() {};\n$Update = function() {};\n$Render = function() { Render3D.drawBall( 0, 0, 0, 3, '#f00' ); }",
+	szLiveCode : "$Init = function() {};\n$Update = function() {};\n$Render = function() { Render3D.drawBox( 0, 0, 0, 0.5, '#f00' ); }",
 	szOldLiveCode : "",
 	txtLiveCode : "",
 	bRunning : true,
