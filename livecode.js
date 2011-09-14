@@ -86,11 +86,10 @@ var Render3D = {
 
 		Render3D.gl.viewport( 0, 0, nWidth, nHeight );
 		Render3D.gl.perspectiveMatrix = new J3DIMatrix4();
-		//Render3D.gl.perspectiveMatrix.lookat( 0, 3, 10, 0, 0, 0, 0, 1, 0 );
-		var vEye    = { x: 0, y: 0, z: 10 };
-		var vLookAt = { x: 0, y: 0, z: 0 };
-		var vUp     = { x: 0, y: 1, z: 0 };
-		Render3D.gl.perspectiveMatrix.lookat( vEye.x, vEye.y, vEye.z, vLookAt.x, vLookAt.y, vLookAt.z, vUp.x, vUp.y, vUp.z );
+		var vEye    = new J3DVector3( 0, 0, 10 );
+		var vLookAt = new J3DVector3( 0, 0, 0 );
+		var vUp     = new J3DVector3( 0, 1, 0 );
+		Render3D.gl.perspectiveMatrix.lookat( vEye, vLookAt, vUp );
 		Render3D.gl.perspectiveMatrix.perspective( nFOV, nAspect, nDepthNear, nDepthFar );
 
 	},
