@@ -86,7 +86,11 @@ var Render3D = {
 
 		Render3D.gl.viewport( 0, 0, nWidth, nHeight );
 		Render3D.gl.perspectiveMatrix = new J3DIMatrix4();
-		Render3D.gl.perspectiveMatrix.lookat( 0, 3, 10, 0, 0, 0, 0, 1, 0 );
+		//Render3D.gl.perspectiveMatrix.lookat( 0, 3, 10, 0, 0, 0, 0, 1, 0 );
+		var vEye    = { x: 0, y: 0, z: 10 };
+		var vLookAt = { x: 0, y: 0, z: 0 };
+		var vUp     = { x: 0, y: 1, z: 0 };
+		Render3D.gl.perspectiveMatrix.lookat( vEye.x, vEye.y, vEye.z, vLookAt.x, vLookAt.y, vLookAt.z, vUp.x, vUp.y, vUp.z );
 		Render3D.gl.perspectiveMatrix.perspective( nFOV, nAspect, nDepthNear, nDepthFar );
 
 	},
@@ -108,9 +112,9 @@ var Render3D = {
 
 		// 2. Bind uniforms
 		Render3D.pBox.mModelView.makeIdentity();
-		Render3D.pBox.mModelView.translate( x, y, z );
+		//Render3D.pBox.mModelView.scale( nSize, nSize, nSize );
 		Render3D.pBox.mModelView.rotate( 45, 1, 1, 1 );
-		Render3D.pBox.mModelView.scale( nSize, nSize, nSize );
+		Render3D.pBox.mModelView.translate( x, y, z );
 
 		Render3D.pBox.mWorld.load( Render3D.pBox.mModelView );
 		Render3D.pBox.mWorld.invert();
@@ -174,6 +178,9 @@ var Sys = {
 		pCanvas.setAttribute( "height", nHeight );
 
 		Render3D.SetViewportAndPerspective( nWidth, nHeight, 60, nWidth / nHeight, 0.1, 1000 );
+
+		// render the last frame before the resize
+		Sys.Render();
 	},
 	UpdateLiveCode : function() {
 		// save old live code in case of error
