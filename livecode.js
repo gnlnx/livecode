@@ -24,14 +24,46 @@ var Util = {
 			pContext.attachShader( pShaderProgram, pShader );
 		});
 	},
+	makeObject : function( pContext, aVertices, aNormals, aIndices ) {
+		var pObj = {};
+
+		pObj.vertexObject = pContext.createBuffer();
+		pContext.bindBuffer( pContext.ARRAY_BUFFER, pObj.vertexObject );
+		pContext.bufferData( pContext.ARRAY_BUFFER, aVertices, pContext.STATIC_DRAW );
+
+		pObj.normalObject = pContext.createBuffer();
+		pContext.bindBuffer( pContext.ARRAY_BUFFER, pObj.normalObject );
+		pContext.bufferData( pContext.ARRAY_BUFFER, aNormals, pContext.STATIC_DRAW );
+
+		pContext.bindBuffer( pContext.ARRAY_BUFFER, null );
+
+		pObj.indexObject = pContext.createBuffer();
+		pContext.bindBuffer( pContext.ELEMENT_ARRAY_BUFFER, pObj.indexObject );
+		pContext.bufferData( pContext.ELEMENT_ARRAY_BUFFER, aIndices, pContext.STATIC_DRAW );
+		pContext.bindBuffer( pContext.ELEMENT_ARRAY_BUFFER, null );
+
+		pObj.numIndices = aIndices.length;
+
+		return pObj;
+	},
 	makeSphere : function( pContext, nRadius, nLats, nLongs ) {
 		return makeSphere( pContext, nRadius, nLats, nLongs );
 	},
 	makeBox : function( pContext ) {
 		return makeBox( pContext );
+	},
+	makePlane : function( pContext, nWidth, nLength ) {
+		var aVertices = new Float32Array([ 1, 1, 1,   1, 1, -1,   -1, 1, -1,   -1, 1, 1 ]);
+		var aNormals = new Float32Array([  0, 1, 0,   0, 1,  0,    0, 1,  0,    0, 1, 0 ]);
+
+		var aIndices = new Uint8Array([ 0, 1, 2,   0, 2, 3 ]);
+
+		return Util.makeObject( pContext, aVertices, aNormals, aIndices );
 	}
 	
 };
+
+var nAngle = 0;
 
 // define Render3D object
 var Render3D = {
@@ -74,6 +106,8 @@ var Render3D = {
 
 		// 5. Set up box
 		Render3D.pBox = Util.makeBox( Render3D.gl );
+		//Render3D.pBox = Util.makePlane( Render3D.gl, 10, 10 );
+		//Render3D.pBox = Util.makeSphere( Render3D.gl, 1, 20, 20 );
 		Render3D.pBox.mModelView = new J3DIMatrix4();
 		Render3D.pBox.nWorldMatrixLoc = Render3D.gl.getUniformLocation( Render3D.pShaderProgram, "mWorld" );
 		Render3D.pBox.mWorld = new J3DIMatrix4();
@@ -86,9 +120,9 @@ var Render3D = {
 
 		Render3D.gl.viewport( 0, 0, nWidth, nHeight );
 		Render3D.gl.perspectiveMatrix = new J3DIMatrix4();
-		var vEye    = new J3DVector3( 0, 0, 10 );
-		var vLookAt = new J3DVector3( 0, 0, 0 );
-		var vUp     = new J3DVector3( 0, 1, 0 );
+		var vEye    = new J3DIVector3( 0, 0, 20 );
+		var vLookAt = new J3DIVector3( 0, 0, 0 );
+		var vUp     = new J3DIVector3( 0, 1, 0 );
 		Render3D.gl.perspectiveMatrix.lookat( vEye, vLookAt, vUp );
 		Render3D.gl.perspectiveMatrix.perspective( nFOV, nAspect, nDepthNear, nDepthFar );
 
@@ -111,11 +145,15 @@ var Render3D = {
 
 		// 2. Bind uniforms
 		Render3D.pBox.mModelView.makeIdentity();
-		//Render3D.pBox.mModelView.scale( nSize, nSize, nSize );
-		Render3D.pBox.mModelView.rotate( 45, 1, 1, 1 );
+		Render3D.pBox.mModelView.scale( nSize, nSize, nSize );
+		Render3D.pBox.mModelView.rotate( -25, 1, 0, 0 );
+		//Render3D.pBox.mModelView.rotate( 15, 0, 1, 0 );
+		nAngle = ( nAngle + 1 ) % 360;
+		Render3D.pBox.mModelView.rotate( nAngle, 0, 1, 1 );
 		Render3D.pBox.mModelView.translate( x, y, z );
 
 		Render3D.pBox.mWorld.load( Render3D.pBox.mModelView );
+		//Render3D.pBox.mWorld.makeIdentity();
 		Render3D.pBox.mWorld.invert();
 		Render3D.pBox.mWorld.transpose();
 		Render3D.pBox.mWorld.setUniform( Render3D.gl, Render3D.pBox.nWorldMatrixLoc, false );
@@ -173,13 +211,18 @@ var Sys = {
 		}, false );
 	},
 	Resize : function( pCanvas, nWidth, nHeight ) {
-		pCanvas.setAttribute( "width", nWidth );
-		pCanvas.setAttribute( "height", nHeight );
+		//pCanvas.setAttribute( "width", nWidth );
+		//pCanvas.setAttribute( "height", nHeight );
 
-		Render3D.SetViewportAndPerspective( nWidth, nHeight, 60, nWidth / nHeight, 0.1, 1000 );
+		//Render3D.SetViewportAndPerspective( nWidth, nHeight, 30, nWidth / nHeight, 0.01, 10000 );
+		var _nWidth = pCanvas.getAttribute( "width" );
+		var _nHeight = pCanvas.getAttribute( "height" );
+		Render3D.SetViewportAndPerspective( _nWidth, _nHeight, 30, _nWidth / _nHeight, 1, 10000 );
 
+		/*
 		// render the last frame before the resize
 		Sys.Render();
+		*/
 	},
 	UpdateLiveCode : function() {
 		// save old live code in case of error
