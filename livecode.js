@@ -53,12 +53,18 @@ var Util = {
 		return makeBox( pContext );
 	},
 	makePlane : function( pContext, nWidth, nLength ) {
-		var aVertices = new Float32Array([ 1, 1, 1,   1, 1, -1,   -1, 1, -1,   -1, 1, 1 ]);
-		var aNormals = new Float32Array([  0, 1, 0,   0, 1,  0,    0, 1,  0,    0, 1, 0 ]);
-
+		var aVertices = new Float32Array([ 1, 1, 1,      1, 1, -1,     -1, 1, -1,     -1, 1, 1 ]);
+		var aNormals = new Float32Array([  0, 1, 0,      0, 1,  0,      0, 1,  0,      0, 1, 0 ]);
+		var aDiffuse = new Float32Array([  0, 1, 0, 1,   0, 0,  1, 1,   1, 0,  0, 1,   0, 0, 0, 1 ]);
 		var aIndices = new Uint8Array([ 0, 1, 2,   0, 2, 3 ]);
 
-		return Util.makeObject( pContext, aVertices, aNormals, aIndices );
+		var pPlane = Util.makeObject( pContext, aVertices, aNormals, aIndices );
+		pPlane.diffuseObject = pContext.createBuffer();
+		pContext.bindBuffer( pContext.ARRAY_BUFFER, pPlane.diffuseObject );
+		pContext.bufferData( pContext.ARRAY_BUFFER, aDiffuse, pContext.STATIC_DRAW );
+		pContext.bindBuffer( pContext.ARRAY_BUFFER, null );
+
+		return pPlane;
 	}
 	
 };
@@ -91,10 +97,11 @@ var Render3D = {
 
 		// 2. Bind vertex attributes
 		Render3D.pShaderProgram.vPositionLoc = Render3D.gl.getAttribLocation( Render3D.pShaderProgram, "vPosition" );
+		Render3D.pShaderProgram.vDiffuseColorLoc = Render3D.gl.getAttribLocation( Render3D.pShaderProgram, "vDiffuseColor" );
 		Render3D.pShaderProgram.vNormalLoc = Render3D.gl.getAttribLocation( Render3D.pShaderProgram, "vNormal" );
 
 		// 3. Set clear color and depth
-		Render3D.gl.clearColor( 0, 0, 1, 1 );
+		Render3D.gl.clearColor( 0, 0, 0, 1 );
 		Render3D.gl.clearDepth( 1000 );
 
 		Render3D.gl.enable( Render3D.gl.DEPTH_TEST );
@@ -105,8 +112,8 @@ var Render3D = {
 		Render3D.gl.uniform3f( Render3D.gl.getUniformLocation( Render3D.pShaderProgram, "vLightDir" ), 0, 1, -1 );
 
 		// 5. Set up box
-		Render3D.pBox = Util.makeBox( Render3D.gl );
-		//Render3D.pBox = Util.makePlane( Render3D.gl, 10, 10 );
+		//Render3D.pBox = Util.makeBox( Render3D.gl );
+		Render3D.pBox = Util.makePlane( Render3D.gl, 10, 10 );
 		//Render3D.pBox = Util.makeSphere( Render3D.gl, 1, 20, 20 );
 		Render3D.pBox.mModelView = new J3DIMatrix4();
 		Render3D.pBox.nWorldMatrixLoc = Render3D.gl.getUniformLocation( Render3D.pShaderProgram, "mWorld" );
@@ -135,22 +142,25 @@ var Render3D = {
 		
 		// 1. Bind buffers
 		Render3D.gl.enableVertexAttribArray( Render3D.pShaderProgram.vPositionLoc );
+		Render3D.gl.enableVertexAttribArray( Render3D.pShaderProgram.vDiffuseColorLoc );
 		Render3D.gl.enableVertexAttribArray( Render3D.pShaderProgram.vNormalLoc );
 
 		Render3D.gl.bindBuffer( Render3D.gl.ARRAY_BUFFER, Render3D.pBox.vertexObject );
-		Render3D.gl.vertexAttribPointer( 0, 3, Render3D.gl.FLOAT, false, 0, 0 );
+		Render3D.gl.vertexAttribPointer( Render3D.pShaderProgram.vPositionLoc, 3, Render3D.gl.FLOAT, false, 0, 0 );
+		Render3D.gl.bindBuffer( Render3D.gl.ARRAY_BUFFER, Render3D.pBox.diffuseObject );
+		Render3D.gl.vertexAttribPointer( Render3D.pShaderProgram.vDiffuseColorLoc, 4, Render3D.gl.FLOAT, false, 0, 0 );
 		Render3D.gl.bindBuffer( Render3D.gl.ARRAY_BUFFER, Render3D.pBox.normalObject );
-		Render3D.gl.vertexAttribPointer( 1, 3, Render3D.gl.FLOAT, false, 0, 0 );
+		Render3D.gl.vertexAttribPointer( Render3D.pShaderProgram.vNormalLoc, 3, Render3D.gl.FLOAT, false, 0, 0 );
 		Render3D.gl.bindBuffer( Render3D.gl.ELEMENT_ARRAY_BUFFER, Render3D.pBox.indexObject );
 
 		// 2. Bind uniforms
 		Render3D.pBox.mModelView.makeIdentity();
-		Render3D.pBox.mModelView.scale( nSize, nSize, nSize );
+		Render3D.pBox.mModelView.translate( x, y, z );
 		Render3D.pBox.mModelView.rotate( -25, 1, 0, 0 );
 		//Render3D.pBox.mModelView.rotate( 15, 0, 1, 0 );
 		nAngle = ( nAngle + 1 ) % 360;
-		Render3D.pBox.mModelView.rotate( nAngle, 0, 1, 1 );
-		Render3D.pBox.mModelView.translate( x, y, z );
+		Render3D.pBox.mModelView.rotate( nAngle, 0, 1, 0 );
+		Render3D.pBox.mModelView.scale( nSize, nSize, nSize );
 
 		Render3D.pBox.mWorld.load( Render3D.pBox.mModelView );
 		//Render3D.pBox.mWorld.makeIdentity();
@@ -215,9 +225,9 @@ var Sys = {
 		//pCanvas.setAttribute( "height", nHeight );
 
 		//Render3D.SetViewportAndPerspective( nWidth, nHeight, 30, nWidth / nHeight, 0.01, 10000 );
-		var _nWidth = pCanvas.getAttribute( "width" );
-		var _nHeight = pCanvas.getAttribute( "height" );
-		Render3D.SetViewportAndPerspective( _nWidth, _nHeight, 30, _nWidth / _nHeight, 1, 10000 );
+		var _nWidth = 800; //pCanvas.getAttribute( "width" );
+		var _nHeight = 600; //pCanvas.getAttribute( "height" );
+		Render3D.SetViewportAndPerspective( _nWidth, _nHeight, 60, _nWidth / _nHeight, 0.1, 10000 );
 
 		/*
 		// render the last frame before the resize
